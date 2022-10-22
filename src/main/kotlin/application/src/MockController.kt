@@ -7,7 +7,7 @@ import di_container.annotation.Component
 class MockController(
 ){
     @field:Autowired
-    private lateinit var mockService : MockService
+    private lateinit var mockService : MockUseCase
 
     fun action() {
         println("controller action")
