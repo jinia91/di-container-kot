@@ -1,34 +1,23 @@
 package di_container
 
-import application.src.MockController
 import di_container.annotation.Autowired
 import di_container.annotation.Component
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 
 
-class DiContainer(
+abstract class DiContainer(
     classes : Set<Class<*>>
 ){
     companion object {
         private val BEAN_ANNOTATIONS: Set<Class<out Annotation>> = setOf(Component::class.java)
     }
-    private val beans : Set<Any>
+    protected val beans : Set<Any>
 
     init {
         val beans = instantiateBeans(classes)
         dependencyInject(beans)
         this.beans = beans
-    }
-
-    private fun dependencyInject(beans:Set<Any>) {
-        for (bean in beans) {
-            val fieldsToNeedInjection = findFieldsToNeedAutowiring(bean)
-            for (field in fieldsToNeedInjection) {
-                val fieldValueBean = findAutoWiringBean(beans, field.type)
-                setField(bean = bean, field = field, fieldValue = fieldValueBean)
-            }
-        }
     }
 
     private fun instantiateBeans(classes: Set<Class<*>>): Set<Any> {
@@ -47,6 +36,15 @@ class DiContainer(
             return instance
     }
 
+    private fun dependencyInject(beans:Set<Any>) {
+        for (bean in beans) {
+            val fieldsToNeedInjection = findFieldsToNeedAutowiring(bean)
+            for (field in fieldsToNeedInjection) {
+                val fieldValueBean = findAutoWiringBean(beans, field.type)
+                setField(bean = bean, field = field, fieldValue = fieldValueBean)
+            }
+        }
+    }
     private fun findFieldsToNeedAutowiring(bean: Any): Set<Field> {
         return bean.javaClass.declaredFields
             .filter { it.isAnnotationPresent(Autowired::class.java) }
@@ -70,8 +68,4 @@ class DiContainer(
         }
     }
 
-    fun mockAction(){
-        val mock : MockController = beans.find { it.javaClass.isAssignableFrom(MockController::class.java) } as MockController
-        mock.action()
-    }
 }
